@@ -22,7 +22,7 @@ export default function RootLayout({
       <body
         className={`
     ${inter.className}
-    min-h-screen w-full relative overflow-x-hidden
+    min-h-screen w-full relative overflow-hidden
     transition-colors duration-300
 
     text-slate-800 dark:text-slate-100

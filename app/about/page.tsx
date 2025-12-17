@@ -64,6 +64,11 @@ export default function AboutPage() {
 
   return (
     <main className="pt-28 px-6 max-w-7xl mx-auto text-slate-800 dark:text-slate-100">
+      <div className="text-center">
+        <h1 className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-l from-[#001f65] via-sky-400 to-[#6895FD]">
+          About Us
+        </h1>
+      </div>
       {/* ================= ABOUT (IMAGE HERO CAROUSEL) ================= */}
       <motion.section
         initial={{ opacity: 0, y: 40 }}
