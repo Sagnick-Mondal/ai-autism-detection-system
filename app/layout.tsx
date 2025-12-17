@@ -8,8 +8,13 @@ import AuthModal from "./components/AuthModal";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "EmotionAI - Emotion Detection for Autistic Children",
+  title: "AutiSense - Emotion Detection for Autistic Children",
   description: "AI-powered emotion detection for autistic children.",
+  icons: {
+    icon: [
+      {url:"/icon.svg", type:"image/svg+xml" }
+    ]
+  }
 };
 
 export default function RootLayout({

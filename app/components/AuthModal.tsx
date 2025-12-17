@@ -60,7 +60,7 @@ export default function AuthModal() {
               <p className="text-center text-gray-300 mt-2">
                 {mode === "login"
                   ? "Sign in to continue"
-                  : "Join EmotionAI in seconds"}
+                  : "Join AutiSense in seconds"}
               </p>
 
               {/* OAuth */}
@@ -95,7 +95,7 @@ export default function AuthModal() {
                     Don’t have an account?{" "}
                     <button
                       onClick={() => open("signup")}
-                      className="text-white underline"
+                      className="text-white no-underline hover:text-sky-400 transition-all ease-in-out duration-300"
                     >
                       Sign up
                     </button>
@@ -105,7 +105,7 @@ export default function AuthModal() {
                     Already have an account?{" "}
                     <button
                       onClick={() => open("login")}
-                      className="text-white underline"
+                      className="text-white no-underline hover:text-sky-400 transition-all ease-in-out duration-300"
                     >
                       Log in
                     </button>
