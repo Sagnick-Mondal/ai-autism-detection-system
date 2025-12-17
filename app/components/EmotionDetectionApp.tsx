@@ -4,51 +4,35 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AiOutlineUpload, AiOutlineCamera } from "react-icons/ai";
-import {
-  Smile,
-  Frown,
-  Angry,
-  Zap,
-  Meh,
-  Brain,
-} from "lucide-react";
+import { Brain } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 /* ================= TYPES ================= */
 
-type Emotion =
-  | "Happy"
-  | "Sad"
-  | "Angry"
-  | "Surprised"
-  | "Neutral";
-
-interface PredictionResult {
-  predicted_class: Emotion;
+interface BackendResponse {
+  emotion: string;
   confidence: number;
-  error?: string;
+  heatmap: string;
+  primary_explanation: {
+    method: string;
+    reason: string;
+  };
+  extra_explanations: Record<string, any>;
 }
 
-/* ================= ICON MAP ================= */
-
-const EMOTION_ICONS: Record<Emotion, React.ReactNode> = {
-  Happy: <Smile size={32} className="text-yellow-500" />,
-  Sad: <Frown size={32} className="text-blue-500" />,
-  Angry: <Angry size={32} className="text-red-500" />,
-  Surprised: <Zap size={32} className="text-purple-500" />,
-  Neutral: <Meh size={32} className="text-gray-400" />,
-};
+/* ================= COMPONENT ================= */
 
 export default function EmotionDetectionApp() {
   /* ================= REFS ================= */
 
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
 
   /* ================= STATE ================= */
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -59,52 +43,42 @@ export default function EmotionDetectionApp() {
 
     setFile(chosenFile);
     setSelectedImage(URL.createObjectURL(chosenFile));
-    setResult(null);
     setMobileMenuOpen(false);
   };
 
-  const handleUploadChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    handleFileSelect(e.target.files?.[0]);
-  };
-
-  const handleCameraChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    handleFileSelect(e.target.files?.[0]);
-  };
-
   const handleEvaluate = async () => {
-    if (!file) return;
+    if (!file || !selectedImage) return;
 
     setLoading(true);
-    setResult(null);
 
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(
-        "http://127.0.0.1:8000/predict",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data: PredictionResult = await response.json();
-      setResult(data);
-    } catch {
-      setResult({
-        predicted_class: "Neutral",
-        confidence: 0,
-        error: "Could not connect to server.",
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        body: formData,
       });
+
+      if (!response.ok) {
+        throw new Error("Prediction failed");
+      }
+
+      const data: BackendResponse = await response.json();
+
+      // Persist result for result page
+      sessionStorage.setItem("emotionResult", JSON.stringify(data));
+      sessionStorage.setItem("emotionImage", selectedImage);
+
+      router.push("/result");
+    } catch (err) {
+      alert("Could not connect to the server. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  /* ================= RENDER ================= */
 
   return (
     <section className="pt-28 pb-32 px-6 flex flex-col items-center">
@@ -163,7 +137,6 @@ export default function EmotionDetectionApp() {
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => uploadInputRef.current?.click()}
             className="flex-1 flex items-center justify-center gap-2 border border-slate-300 dark:border-white/30 dark:hover:bg-white/10 rounded-full p-3"
           >
@@ -174,7 +147,6 @@ export default function EmotionDetectionApp() {
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => cameraInputRef.current?.click()}
             className="flex-1 flex items-center justify-center gap-2 border border-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 dark:border-white/30 rounded-full p-3"
           >
@@ -186,9 +158,7 @@ export default function EmotionDetectionApp() {
         {/* MOBILE */}
         <div className="md:hidden w-full relative">
           <motion.button
-            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => setMobileMenuOpen((p) => !p)}
             className="w-full flex items-center justify-center gap-2 border border-slate-300 dark:border-white/30 rounded-full p-3"
           >
@@ -202,7 +172,6 @@ export default function EmotionDetectionApp() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
                 className="absolute left-0 right-0 mt-3 bg-white dark:bg-black border border-slate-200 dark:border-white/20 rounded-2xl shadow-xl z-20 overflow-hidden"
               >
                 <button
@@ -230,7 +199,7 @@ export default function EmotionDetectionApp() {
           ref={uploadInputRef}
           type="file"
           accept="image/*"
-          onChange={handleUploadChange}
+          onChange={(e) => handleFileSelect(e.target.files?.[0])}
           className="hidden"
         />
 
@@ -239,7 +208,7 @@ export default function EmotionDetectionApp() {
           type="file"
           accept="image/*"
           capture
-          onChange={handleCameraChange}
+          onChange={(e) => handleFileSelect(e.target.files?.[0])}
           className="hidden"
         />
 
@@ -247,7 +216,6 @@ export default function EmotionDetectionApp() {
         <motion.button
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
-          transition={{ type: "spring", stiffness: 260, damping: 18 }}
           onClick={handleEvaluate}
           disabled={loading || !file}
           className="
@@ -260,41 +228,6 @@ export default function EmotionDetectionApp() {
         >
           {loading ? "Analyzing..." : "Analyze Emotion"}
         </motion.button>
-
-        {/* RESULT */}
-        {result && (
-          <motion.div
-            className="w-full mt-4 p-5 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/20 rounded-2xl text-center"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {result.error ? (
-              <p className="text-red-500">{result.error}</p>
-            ) : (
-              <>
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  {EMOTION_ICONS[result.predicted_class]}
-                  <p className="text-2xl font-bold">
-                    {result.predicted_class}
-                  </p>
-                </div>
-
-                <div className="w-full bg-slate-300 dark:bg-white/20 h-3 rounded-full overflow-hidden mt-4">
-                  <motion.div
-                    className="h-3 bg-green-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${result.confidence}%` }}
-                    transition={{ duration: 1 }}
-                  />
-                </div>
-
-                <p className="mt-2">
-                  {result.confidence}% Confidence
-                </p>
-              </>
-            )}
-          </motion.div>
-        )}
       </motion.div>
     </section>
   );

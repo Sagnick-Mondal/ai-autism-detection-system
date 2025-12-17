@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 import ShootingStars from "./components/ShootingStars";
 import ThemeProvider from "./components/ThemeProvider";
 import AuthModal from "./components/AuthModal";
 
+export const rounded = Nunito({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+});
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {

@@ -1,5 +1,9 @@
 import numpy as np
-import cv2
+from PIL import Image
+import io
+
+# Must match training
+IMG_SIZE = (224, 224)
 
 EMOTIONS = [
     "Angry",
@@ -8,18 +12,15 @@ EMOTIONS = [
     "Happy",
     "Sad",
     "Surprise",
+    "Neutral",
 ]
 
-def preprocess_image(image_bytes):
-    img_array = np.frombuffer(image_bytes, np.uint8)
-    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
 
-    if img is None:
-        raise ValueError("Invalid image")
+def preprocess_image(image_bytes: bytes):
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    image = image.resize(IMG_SIZE)
 
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (224, 224))  # matches EfficientNet-style models
-    img = img.astype("float32") / 255.0
+    img_array = np.array(image).astype("float32") / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-    img = np.expand_dims(img, axis=0)
-    return img
+    return img_array

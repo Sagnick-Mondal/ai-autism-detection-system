@@ -1,6 +1,5 @@
-"use client";
-
 import Typewriter from "typewriter-effect";
+import { rounded } from "@/app/fonts";
 
 interface LogoProps {
   size?: number;
@@ -20,12 +19,12 @@ export default function Logo({
         <div className="leading-tight select-none">
           <a
             href="/"
-            className="
-              block text-xl font-extrabold
+            className={`
+              block text-2xl font-extrabold ${rounded.className}
               bg-clip-text text-transparent
               bg-gradient-to-tl from-[#001f65] via-sky-400 to-[#6895FD]
               whitespace-nowrap
-            "
+            `}
           >
             <Typewriter
               options={{
