@@ -7,8 +7,6 @@ import { AiOutlineUpload, AiOutlineCamera } from "react-icons/ai";
 import { Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-/* ================= TYPES ================= */
-
 interface BackendResponse {
   emotion: string;
   confidence: number;
@@ -20,27 +18,18 @@ interface BackendResponse {
   extra_explanations: Record<string, any>;
 }
 
-/* ================= COMPONENT ================= */
-
 export default function EmotionDetectionApp() {
-  /* ================= REFS ================= */
-
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
-
-  /* ================= STATE ================= */
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  /* ================= HANDLERS ================= */
-
   const handleFileSelect = (chosenFile?: File) => {
     if (!chosenFile) return;
-
     setFile(chosenFile);
     setSelectedImage(URL.createObjectURL(chosenFile));
     setMobileMenuOpen(false);
@@ -50,7 +39,6 @@ export default function EmotionDetectionApp() {
     if (!file || !selectedImage) return;
 
     setLoading(true);
-
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -60,29 +48,23 @@ export default function EmotionDetectionApp() {
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error("Prediction failed");
-      }
+      if (!response.ok) throw new Error("Prediction failed");
 
       const data: BackendResponse = await response.json();
-
-      // Persist result for result page
       sessionStorage.setItem("emotionResult", JSON.stringify(data));
       sessionStorage.setItem("emotionImage", selectedImage);
 
       router.push("/result");
-    } catch (err) {
+    } catch {
       alert("Could not connect to the server. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  /* ================= RENDER ================= */
-
   return (
     <section className="pt-28 pb-32 px-6 flex flex-col items-center">
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
       <motion.div
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -99,18 +81,18 @@ export default function EmotionDetectionApp() {
         </p>
       </motion.div>
 
-      {/* ================= CARD ================= */}
+      {/* ================= GLASS CARD ================= */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.3 }}
         className="
           mt-16 w-full max-w-lg p-8
-          bg-white/80 dark:bg-white/5
-          backdrop-blur-2xl
-          border border-slate-200 dark:border-white/20
+          bg-white/10 dark:bg-white/5
+          backdrop-blur-xl
+          border border-white/20 dark:border-white/10
           rounded-3xl
-          shadow-xl
+          shadow-[0_8px_30px_rgba(0,0,0,0.12)]
           flex flex-col items-center gap-6
         "
       >
@@ -124,21 +106,19 @@ export default function EmotionDetectionApp() {
             animate={{ opacity: 1, scale: 1 }}
           />
         ) : (
-          <div className="w-60 h-60 flex flex-col items-center justify-center gap-2 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-gray-300 rounded-2xl border border-slate-200 dark:border-white/20">
+          <div className="w-60 h-60 flex flex-col items-center justify-center gap-2 bg-white/20 dark:bg-white/10 text-slate-600 dark:text-gray-300 rounded-2xl border border-white/30">
             <Brain size={32} />
             <span className="text-sm">Image Preview</span>
           </div>
         )}
 
-        {/* ================= UPLOAD CONTROLS ================= */}
-
-        {/* DESKTOP */}
+        {/* DESKTOP BUTTONS */}
         <div className="hidden md:flex w-full gap-4">
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => uploadInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-2 border border-slate-300 dark:border-white/30 dark:hover:bg-white/10 rounded-full p-3"
+            className="flex-1 flex items-center justify-center gap-2 border border-white/30 rounded-full p-3 hover:bg-white/20"
           >
             <AiOutlineUpload size={22} />
             Upload
@@ -148,7 +128,7 @@ export default function EmotionDetectionApp() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => cameraInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-2 border border-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 dark:border-white/30 rounded-full p-3"
+            className="flex-1 flex items-center justify-center gap-2 border border-white/30 rounded-full p-3 hover:bg-white/20"
           >
             <AiOutlineCamera size={22} />
             Take Photo
@@ -160,7 +140,7 @@ export default function EmotionDetectionApp() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={() => setMobileMenuOpen((p) => !p)}
-            className="w-full flex items-center justify-center gap-2 border border-slate-300 dark:border-white/30 rounded-full p-3"
+            className="w-full flex items-center justify-center gap-2 border border-white/30 rounded-full p-3"
           >
             <AiOutlineUpload size={22} />
             Choose Image
@@ -172,11 +152,11 @@ export default function EmotionDetectionApp() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute left-0 right-0 mt-3 bg-white dark:bg-black border border-slate-200 dark:border-white/20 rounded-2xl shadow-xl z-20 overflow-hidden"
+                className="absolute left-0 right-0 mt-3 bg-white/80 dark:bg-black/70 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl z-20 overflow-hidden"
               >
                 <button
                   onClick={() => uploadInputRef.current?.click()}
-                  className="w-full px-5 py-3 flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-white/10"
+                  className="w-full px-5 py-3 flex items-center gap-3 hover:bg-white/30"
                 >
                   <AiOutlineUpload />
                   Upload from Gallery
@@ -184,7 +164,7 @@ export default function EmotionDetectionApp() {
 
                 <button
                   onClick={() => cameraInputRef.current?.click()}
-                  className="w-full px-5 py-3 flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-white/10"
+                  className="w-full px-5 py-3 flex items-center gap-3 hover:bg-white/30"
                 >
                   <AiOutlineCamera />
                   Take a Photo
@@ -194,7 +174,7 @@ export default function EmotionDetectionApp() {
           </AnimatePresence>
         </div>
 
-        {/* HIDDEN INPUTS */}
+        {/* INPUTS */}
         <input
           ref={uploadInputRef}
           type="file"
@@ -212,7 +192,7 @@ export default function EmotionDetectionApp() {
           className="hidden"
         />
 
-        {/* ANALYZE BUTTON */}
+        {/* ANALYZE */}
         <motion.button
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}

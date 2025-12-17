@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 
 type Star = {
@@ -19,26 +19,26 @@ type Meteor = {
 };
 
 export default function ShootingStars() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (!mounted || resolvedTheme !== "dark") return;
+    if (resolvedTheme !== "dark") return;
 
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
     const resize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     };
 
-    resize();
     window.addEventListener("resize", resize);
 
     /* ---------- Stars ---------- */
@@ -52,6 +52,7 @@ export default function ShootingStars() {
     /* ---------- Meteors ---------- */
     const meteors: Meteor[] = [];
     let meteorCooldown = 0;
+    let frameId: number;
 
     const spawnMeteor = () => {
       meteors.push({
@@ -63,30 +64,26 @@ export default function ShootingStars() {
       });
     };
 
-    let frameId: number;
-
     const animate = () => {
       ctx.clearRect(0, 0, width, height);
 
-      /* Draw stars */
+      /* Stars */
       ctx.fillStyle = "white";
       for (const s of stars) {
         s.twinkle += 0.01;
-        const alpha = 0.3 + Math.sin(s.twinkle) * 0.2;
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = 0.3 + Math.sin(s.twinkle) * 0.2;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      /* Spawn meteor occasionally */
+      /* Meteors */
       meteorCooldown++;
       if (meteorCooldown > 100 + Math.random() * 100) {
         spawnMeteor();
         meteorCooldown = 0;
       }
 
-      /* Draw meteors */
       ctx.globalAlpha = 1;
       ctx.strokeStyle = "rgba(255,255,255,0.8)";
       ctx.lineWidth = 2;
@@ -117,12 +114,13 @@ export default function ShootingStars() {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resize);
     };
-  }, [mounted, resolvedTheme]);
+  }, [resolvedTheme]);
 
-  if (!mounted || resolvedTheme !== "dark") return null;
+  if (resolvedTheme !== "dark") return null;
 
   return (
     <canvas
+      key="dark-stars"
       ref={canvasRef}
       className="fixed inset-0 z-0 pointer-events-none"
     />

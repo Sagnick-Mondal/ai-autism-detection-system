@@ -6,10 +6,6 @@ import ShootingStars from "./components/ShootingStars";
 import ThemeProvider from "./components/ThemeProvider";
 import AuthModal from "./components/AuthModal";
 
-export const rounded = Nunito({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-});
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {

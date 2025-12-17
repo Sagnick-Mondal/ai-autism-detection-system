@@ -1,42 +1,41 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  // Load saved theme
+  // Prevent hydration mismatch
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
-    }
+    setMounted(true);
   }, []);
 
-  // Apply theme
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+  if (!mounted) return null;
+
+  const isDark = theme === "dark";
 
   return (
-    <button
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+    <motion.button
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       className="
-        p-2 rounded-full 
+        p-2 rounded-full
         bg-white/30 dark:bg-white/10
         backdrop-blur-md
-        hover:scale-105 transition
       "
       aria-label="Toggle theme"
     >
-      {theme === "light" ? (
-        <Moon className="w-5 h-5 text-indigo-700" />
-      ) : (
+      {isDark ? (
         <Sun className="w-5 h-5 text-yellow-300" />
+      ) : (
+        <Moon className="w-5 h-5 text-indigo-700" />
       )}
-    </button>
+    </motion.button>
   );
 }
