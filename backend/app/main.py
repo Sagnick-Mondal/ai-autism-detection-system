@@ -3,13 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 
 from app.model import get_model
-from app.utils import preprocess_image, EMOTIONS
+from app.utils import preprocess_image
+from app.schemas import PredictionResponse
+from app.config import EMOTIONS
 
 app = FastAPI(title="AutiSense AI Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # tighten later
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -20,24 +22,28 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/predict")
+@app.post("/predict", response_model=PredictionResponse)
 async def predict(file: UploadFile = File(...)):
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Invalid image")
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
 
     image_bytes = await file.read()
 
     try:
-        img = preprocess_image(image_bytes)
+        image = preprocess_image(image_bytes)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Image error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
-    model = get_model()
+    try:
+        model = get_model()
+        predictions = model.predict(image, verbose=0)[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Inference failed: {e}")
 
-    preds = model.predict(img, verbose=0)[0]
-    idx = int(np.argmax(preds))
+    idx = int(np.argmax(predictions))
+    confidence = float(predictions[idx] * 100)
 
-    return {
-        "emotion": EMOTIONS[idx],
-        "confidence": round(float(preds[idx]) * 100, 2),
-    }
+    return PredictionResponse(
+        emotion=EMOTIONS[idx],
+        confidence=confidence,
+    )

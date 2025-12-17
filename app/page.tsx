@@ -1,4 +1,4 @@
-import EmotionDetectionApp from "./components/EmotionDetectionApp";
+import EmotionDetectionApp from "./detection/EmotionDetectionApp";
 import LandingPage from "./components/LandingPage";
 import Navbar from "./components/Navbar";
 import AboutPage from "./about/page";
