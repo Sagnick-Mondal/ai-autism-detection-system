@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Nunito } from "next/font/google";
+
 import "./globals.css";
 import ShootingStars from "./components/ShootingStars";
 import ThemeProvider from "./components/ThemeProvider";
