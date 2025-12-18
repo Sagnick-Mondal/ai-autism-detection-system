@@ -43,7 +43,7 @@ export default function EmotionDetectionApp() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("http://127.0.0.1:8000/predict", {
+      const response = await fetch(process.env.BACKEND_URL + "/predict", {
         method: "POST",
         body: formData,
       });
