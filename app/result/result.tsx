@@ -49,10 +49,20 @@ export default function Result() {
 
   return (
     <section className="min-h-screen pt-28 px-6 flex justify-center">
-      <div className="max-w-6xl w-full grid md:grid-cols-2 gap-12 bg-white/80 dark:bg-white/5 backdrop-blur-2xl border border-slate-200 dark:border-white/20 rounded-3xl shadow-xl p-10">
+      <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 bg-white/80 dark:bg-white/5 backdrop-blur-2xl border border-slate-200 dark:border-white/20 rounded-3xl shadow-xl p-10">
 
         {/* IMAGE / HEATMAP WITH SMOOTH TOGGLE */}
-        <div className="relative rounded-2xl overflow-hidden">
+        <div
+          className="
+            relative
+            w-full
+            aspect-square
+            md:aspect-auto
+            md:h-full
+            rounded-2xl
+            overflow-hidden
+          "
+        >
           <AnimatePresence mode="wait">
             <motion.img
               key={showHeatmap ? "heatmap" : "original"}
@@ -62,7 +72,7 @@ export default function Result() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
               transition={{ duration: 0.35, ease: "easeInOut" }}
-              className="w-full h-full object-cover absolute inset-0"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           </AnimatePresence>
 
@@ -91,7 +101,6 @@ export default function Result() {
             {result.confidence.toFixed(2)}% confidence
           </p>
 
-          {/* XAI EXPLANATION */}
           <div className="mt-6 p-5 bg-slate-100 dark:bg-white/10 rounded-2xl">
             <h3 className="font-semibold mb-2">Why did the model predict this?</h3>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -99,7 +108,6 @@ export default function Result() {
             </p>
           </div>
 
-          {/* DISCLAIMER */}
           <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
             The highlighted regions indicate areas that most influenced the model’s decision.
             Higher confidence does not imply certainty and predictions may vary with image quality.
