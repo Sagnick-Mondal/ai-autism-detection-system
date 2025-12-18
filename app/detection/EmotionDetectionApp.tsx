@@ -43,7 +43,7 @@ export default function EmotionDetectionApp() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(process.env.BACKEND_URL + "/predict", {
+      const response = await fetch("https://ai-autism-detection-system-main.onrender.com/predict", {
         method: "POST",
         body: formData,
       });
