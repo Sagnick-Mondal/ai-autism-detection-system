@@ -12,9 +12,7 @@ export const metadata: Metadata = {
   title: "AutiSense - Emotion Detection for Autistic Children",
   description: "AI-powered emotion detection for autistic children.",
   icons: {
-    icon: [
-      {url:"/icon.svg", type:"image/svg+xml" }
-    ]
+    icon: "./icon.png"
   }
 };
 

@@ -1,36 +1,168 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+🧠 AutiSense – Explainable Emotion Recognition System
 
-## Getting Started
+AutiSense is a web-based AI system for facial emotion recognition, specifically designed with a focus on autistic children. The system not only predicts emotions from facial images but also explains why a particular emotion was predicted using Explainable AI (XAI) techniques such as heatmap visualizations and dynamic textual explanations.
 
-First, run the development server:
+This project was developed as a Final Year B.Tech Project.
 
-```bash
+✨ Key Features
+
+🎭 Facial Emotion Recognition (6 emotions)
+
+🔥 Explainable AI (XAI) using heatmaps
+
+🧠 Dynamic, confidence-aware explanations
+
+🔁 Smooth toggle between original image & heatmap
+
+⚡ Fast, scalable backend inference
+
+🌐 Fully deployed (Frontend + Backend)
+
+🧩 Emotions Detected
+
+The system classifies facial expressions into the following categories:
+
+Angry
+
+Disgust
+
+Fear
+
+Happy
+
+Sad
+
+Surprise
+
+🧠 Explainable AI (XAI)
+
+AutiSense integrates interpretability directly into the prediction pipeline.
+
+🔍 Heatmap Visualization
+
+Highlights facial regions that most influenced the prediction
+
+Warm colors (red/yellow): strong influence
+
+Cool colors (blue): low influence
+
+📝 Dynamic Explanation
+
+Instead of static text, the system generates explanations dynamically based on:
+
+predicted emotion
+
+confidence score
+
+attention distribution in the heatmap
+
+Example:
+
+“The model strongly focused on the mouth and cheek regions. This pattern aligns with known facial expression characteristics of happiness. The predicted confidence of 92.4% reflects how clearly these features were detected.”
+
+This improves trust, transparency, and interpretability, which is especially important in healthcare-oriented AI systems.
+
+🏗️ System Architecture
+[ User Uploads Image ]
+            |
+            v
+[ Next.js Frontend ]
+            |
+            v
+[ FastAPI Backend ]
+            |
+   -------------------
+   | Emotion Model  |
+   | Heatmap (XAI)  |
+   | Explanation    |
+   -------------------
+            |
+            v
+[ Result Page with XAI ]
+
+🧪 Dataset
+
+The model was trained using:
+
+Autistic Children Emotions Dataset
+Author: Dr. Fatma M. Talaat
+
+This dataset contains labeled facial emotion images of autistic children and was selected to ensure domain relevance and ethical applicability.
+
+🛠️ Tech Stack
+Frontend
+
+Next.js (App Router)
+
+TypeScript
+
+Tailwind CSS
+
+Framer Motion
+
+Backend
+
+FastAPI
+
+TensorFlow / Keras
+
+OpenCV
+
+NumPy
+
+🚀 Deployment
+
+Frontend: Vercel
+
+Backend: Render
+
+The frontend communicates securely with the backend API for real-time inference and explanation generation.
+
+⚙️ Local Setup (Optional)
+Backend
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+Frontend
+cd frontend
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+⚠️ Limitations
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Performance depends on image quality and face visibility
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Designed for research and educational use, not medical diagnosis
 
-## Learn More
+Heatmaps indicate attention, not absolute causality
 
-To learn more about Next.js, take a look at the following resources:
+🎓 Academic Relevance
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project demonstrates:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Practical application of Deep Learning
 
-## Deploy on Vercel
+Responsible AI through Explainability (XAI)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Human-centric AI design for sensitive domains
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+End-to-end system deployment
+
+It is suitable for:
+
+Final year evaluation
+
+Project demonstrations
+
+Research extensions
+
+📜 License
+
+This project is released under the MIT License, allowing free use, modification, and distribution with attribution.
+
+🙌 Acknowledgements
+
+Dr. Fatma M. Talaat for the dataset
+
+Open-source communities behind TensorFlow, FastAPI, and Next.js
