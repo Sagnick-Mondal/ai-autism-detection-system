@@ -46,7 +46,7 @@ export default function EmotionDetectionApp() {
       formData.append("file", file);
 
       const response = await fetch(
-        "http://127.0.0.1:8000/predict-safe",
+        "https://ai-autism-detection-system-main.onrender.com/predict-safe",
         {
           method: "POST",
           body: formData,
