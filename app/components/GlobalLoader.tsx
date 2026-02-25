@@ -30,7 +30,7 @@ export default function GlobalLoader({
           >
             <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl rounded-3xl p-8 shadow-xl flex flex-col items-center gap-6">
               <motion.div
-                className="w-12 h-12 border-4 border-t-[#001f65] border-slate-300 rounded-full"
+                className="w-12 h-12 border-4 border-t-emerald-400 border-slate-300 rounded-full"
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
               />

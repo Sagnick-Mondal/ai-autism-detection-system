@@ -6,15 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AiOutlineUpload, AiOutlineCamera } from "react-icons/ai";
 import { Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
+
 import ErrorModal from "../components/ErrorModal";
 import ASDProbabilityModal from "../components/ASDProbabilityModal";
 import GlobalLoader from "../components/GlobalLoader";
-
-interface BackendResponse {
-  emotion: string;
-  confidence: number;
-  heatmap: string;
-}
 
 export default function EmotionDetectionApp() {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -23,86 +18,102 @@ export default function EmotionDetectionApp() {
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Error modal state
+  // Error modal
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // ASD modal
   const [asdModalOpen, setAsdModalOpen] = useState(false);
   const [autismProb, setAutismProb] = useState(0);
   const [nonAutismProb, setNonAutismProb] = useState(0);
 
+  // Global Loader
   const [globalLoading, setGlobalLoading] = useState(false);
+  const [loaderMessage, setLoaderMessage] = useState("Analyzing image...");
 
   const handleFileSelect = (chosenFile?: File) => {
     if (!chosenFile) return;
-
     setFile(chosenFile);
     setSelectedImage(URL.createObjectURL(chosenFile));
     setMobileMenuOpen(false);
   };
 
+  // ===============================
+  // MAIN PIPELINE
+  // ===============================
   const handleEvaluate = async () => {
-  if (!file) return;
-
-  setGlobalLoading(true);
-
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    // 1️⃣ Age Check
-    const ageResponse = await fetch(
-      "https://ai-autism-detection-system-main.onrender.com/check-age",
-      { method: "POST", body: formData }
-    );
-
-    const ageData = await ageResponse.json();
-
-    if (!ageResponse.ok) {
-      throw new Error(ageData.detail);
-    }
-
-    // 2️⃣ ASD Check
-    const asdResponse = await fetch(
-      "https://ai-autism-detection-system-main.onrender.com/check-asd",
-      { method: "POST", body: formData }
-    );
-
-    const asdData = await asdResponse.json();
-
-    if (!asdResponse.ok) {
-      throw new Error(asdData.detail);
-    }
-
-    setAutismProb(asdData.autism_probability);
-    setNonAutismProb(asdData.non_autism_probability);
-
-    setAsdModalOpen(true);
-
-  } catch (err: any) {
-    setErrorMessage(err.message);
-    setErrorModalOpen(true);
-  } finally {
-    setGlobalLoading(false);
-  }
-};
-
-  const handleContinueToEmotion = async () => {
     if (!file) return;
+
+    setGlobalLoading(true);
 
     try {
       const formData = new FormData();
       formData.append("file", file);
+
+      // 1️⃣ AGE CHECK
+      setLoaderMessage("Checking age...");
+      const ageResponse = await fetch(
+        "https://ai-autism-detection-system-main.onrender.com/check-age",
+        { method: "POST", body: formData }
+      );
+
+      const ageData = await ageResponse.json();
+
+      if (!ageResponse.ok) {
+        throw new Error(ageData.detail);
+      }
+
+      // 2️⃣ ASD CHECK
+      setLoaderMessage("Analyzing ASD traits...");
+      const asdResponse = await fetch(
+        "https://ai-autism-detection-system-main.onrender.com/check-asd",
+        { method: "POST", body: formData }
+      );
+
+      const asdData = await asdResponse.json();
+
+      if (!asdResponse.ok) {
+        throw new Error(asdData.detail);
+      }
+
+      setAutismProb(asdData.autism_probability);
+      setNonAutismProb(asdData.non_autism_probability);
+
+      setAsdModalOpen(true);
+
+    } catch (err: any) {
+      setErrorMessage(
+        err?.message ||
+          "We could not analyze this image. Please try a clearer facial photo."
+      );
+      setErrorModalOpen(true);
+    } finally {
+      setGlobalLoading(false);
+    }
+  };
+
+  // ===============================
+  // CONTINUE TO EMOTION
+  // ===============================
+  const handleContinueToEmotion = async () => {
+    if (!file) return;
+
+    setGlobalLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      setLoaderMessage("Generating emotion heatmap...");
 
       const response = await fetch(
         "https://ai-autism-detection-system-main.onrender.com/predict-emotion",
         {
           method: "POST",
           body: formData,
-        },
+        }
       );
 
       const data = await response.json();
@@ -116,9 +127,12 @@ export default function EmotionDetectionApp() {
 
       setAsdModalOpen(false);
       router.push("/result");
+
     } catch (err: any) {
       setErrorMessage(err.message);
       setErrorModalOpen(true);
+    } finally {
+      setGlobalLoading(false);
     }
   };
 
@@ -258,7 +272,7 @@ export default function EmotionDetectionApp() {
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
             onClick={handleEvaluate}
-            disabled={loading || !file}
+            disabled={!file}
             className="
               w-full px-6 py-3 rounded-full
               bg-gradient-to-br from-[#001f65] to-[#6895FD]
@@ -267,12 +281,12 @@ export default function EmotionDetectionApp() {
               disabled:opacity-50 disabled:cursor-not-allowed
             "
           >
-            {loading ? "Analyzing..." : "Analyze Emotion"}
+            Analyze Emotion
           </motion.button>
         </motion.div>
       </section>
 
-      {/* ERROR MODAL */}
+      {/* MODALS */}
       <ErrorModal
         isOpen={errorModalOpen}
         message={errorMessage}
@@ -282,6 +296,7 @@ export default function EmotionDetectionApp() {
           setSelectedImage(null);
         }}
       />
+
       <ASDProbabilityModal
         isOpen={asdModalOpen}
         autismProbability={autismProb}
@@ -289,7 +304,8 @@ export default function EmotionDetectionApp() {
         onContinue={handleContinueToEmotion}
         onClose={() => setAsdModalOpen(false)}
       />
-      <GlobalLoader isOpen={globalLoading} />
+
+      <GlobalLoader isOpen={globalLoading} message={loaderMessage} />
     </>
   );
 }
