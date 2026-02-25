@@ -8,6 +8,7 @@ import { Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ErrorModal from "../components/ErrorModal";
 import ASDProbabilityModal from "../components/ASDProbabilityModal";
+import GlobalLoader from "../components/GlobalLoader";
 
 interface BackendResponse {
   emotion: string;
@@ -33,6 +34,8 @@ export default function EmotionDetectionApp() {
   const [autismProb, setAutismProb] = useState(0);
   const [nonAutismProb, setNonAutismProb] = useState(0);
 
+  const [globalLoading, setGlobalLoading] = useState(false);
+
   const handleFileSelect = (chosenFile?: File) => {
     if (!chosenFile) return;
 
@@ -42,47 +45,50 @@ export default function EmotionDetectionApp() {
   };
 
   const handleEvaluate = async () => {
-    if (!file) return;
+  if (!file) return;
 
-    setLoading(true);
+  setGlobalLoading(true);
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
-      // STEP 1: Check ASD
-      const asdResponse = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/check-asd",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+    // 1️⃣ Age Check
+    const ageResponse = await fetch(
+      "http://127.0.0.1:8000/check-age",
+      { method: "POST", body: formData }
+    );
 
-      const asdData = await asdResponse.json();
+    const ageData = await ageResponse.json();
 
-      if (!asdResponse.ok) {
-        throw new Error(asdData.detail || "ASD check failed");
-      }
-
-      // Store ASD probabilities
-      setAutismProb(asdData.autism_probability);
-      setNonAutismProb(asdData.non_autism_probability);
-
-      // Store temporarily for later
-      sessionStorage.setItem("uploadedFileName", file.name);
-
-      setAsdModalOpen(true);
-    } catch (err: any) {
-      setErrorMessage(
-        err.message ||
-          "We could not analyze this image. Please try a clearer facial photo.",
-      );
-      setErrorModalOpen(true);
-    } finally {
-      setLoading(false);
+    if (!ageResponse.ok) {
+      throw new Error(ageData.detail);
     }
-  };
+
+    // 2️⃣ ASD Check
+    const asdResponse = await fetch(
+      "http://127.0.0.1:8000/check-asd",
+      { method: "POST", body: formData }
+    );
+
+    const asdData = await asdResponse.json();
+
+    if (!asdResponse.ok) {
+      throw new Error(asdData.detail);
+    }
+
+    setAutismProb(asdData.autism_probability);
+    setNonAutismProb(asdData.non_autism_probability);
+
+    setAsdModalOpen(true);
+
+  } catch (err: any) {
+    setErrorMessage(err.message);
+    setErrorModalOpen(true);
+  } finally {
+    setGlobalLoading(false);
+  }
+};
 
   const handleContinueToEmotion = async () => {
     if (!file) return;
@@ -92,7 +98,7 @@ export default function EmotionDetectionApp() {
       formData.append("file", file);
 
       const response = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/predict-emotion",
+        "http://127.0.0.1:8000/predict-emotion",
         {
           method: "POST",
           body: formData,
@@ -283,6 +289,7 @@ export default function EmotionDetectionApp() {
         onContinue={handleContinueToEmotion}
         onClose={() => setAsdModalOpen(false)}
       />
+      <GlobalLoader isOpen={globalLoading} />
     </>
   );
 }

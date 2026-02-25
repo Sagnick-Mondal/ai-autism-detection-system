@@ -15,11 +15,12 @@ EMOTIONS = [
     "Surprise",
 ]
 
-
 # ASD model
 ASD_MODEL_PATH = BASE_DIR / "model" / "final_asd_model.keras"
-
-# Model predicts probability of NON-ASD
 # >= 0.6  → Non-Autistic
 # < 0.6   → Autistic
 ASD_THRESHOLD = 0.6
+
+#age model
+AGE_MODEL_PATH = BASE_DIR / "model" /"final_age_classifier.keras"
+AGE_THRESHOLD = 0.5

@@ -6,10 +6,10 @@ import numpy as np
 
 from app.schemas import PredictionResponse, ASDResponse
 from app.validators.image_gate import validate_human_face
-from app.model import get_model, get_asd_model
-from app.utils import preprocess_image, preprocess_asd_image
+from app.model import get_model, get_asd_model, get_age_model
+from app.utils import preprocess_image, preprocess_asd_image, preprocess_age_image
 from app.schemas import PredictionResponse
-from app.config import EMOTIONS, ASD_THRESHOLD
+from app.config import EMOTIONS, ASD_THRESHOLD, AGE_THRESHOLD
 from app.xai_utils import generate_heatmap
 
 
@@ -26,6 +26,45 @@ app.add_middleware(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.post("/check-age")
+async def check_age(file: UploadFile = File(...)):
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    image_bytes = await file.read()
+
+    # Face validation first
+    gate = validate_human_face(image_bytes)
+
+    if not gate["has_human_face"]:
+        raise HTTPException(400, "No human face detected")
+
+    if not gate["face_large_enough"]:
+        raise HTTPException(400, "Face too small for analysis")
+
+    if not gate["face_clear"]:
+        raise HTTPException(400, "Face is blurry or unclear")
+
+    try:
+        age_image = preprocess_age_image(image_bytes)
+        age_model = get_age_model()
+        prediction = float(age_model.predict(age_image, verbose=0)[0][0])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Age inference failed: {e}")
+
+    adult_probability = prediction
+    child_probability = 1 - prediction
+
+    if adult_probability >= AGE_THRESHOLD:
+        raise HTTPException(
+            status_code=400,
+            detail="This model evaluates children only. Kindly provide an image of a child."
+        )
+
+    return {
+        "is_child": True
+    }
 
 @app.post("/check-asd", response_model=ASDResponse)
 async def check_asd(file: UploadFile = File(...)):

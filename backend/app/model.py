@@ -1,14 +1,15 @@
 # app/model.py
 
-from app.config import MODEL_PATH, ASD_MODEL_PATH
+from app.config import MODEL_PATH, ASD_MODEL_PATH, AGE_MODEL_PATH
 import threading
 
 _emotion_model = None
 _asd_model = None
+_age_model = None
 
 _emotion_model_lock = threading.Lock()
 _asd_model_lock = threading.Lock()
-
+_age_model_lock = threading.Lock()
 
 def get_model():
     """
@@ -62,3 +63,25 @@ def get_asd_model():
                     raise RuntimeError(f"ASD model load error: {e}")
 
     return _asd_model
+
+def get_age_model():
+    global _age_model
+
+    if _age_model is None:
+        with _age_model_lock:
+            if _age_model is None:
+                try:
+                    import tensorflow as tf
+
+                    print("Loading Age model lazily...")
+                    _age_model = tf.keras.models.load_model(
+                        AGE_MODEL_PATH,
+                        compile=False
+                    )
+                    print("Age model loaded successfully")
+
+                except Exception as e:
+                    print("❌ Age model loading failed")
+                    raise RuntimeError(f"Age model load error: {e}")
+
+    return _age_model
