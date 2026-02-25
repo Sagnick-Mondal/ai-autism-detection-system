@@ -1,5 +1,6 @@
 # app/main.py
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
@@ -12,7 +13,19 @@ from app.config import EMOTIONS, ASD_THRESHOLD, AGE_THRESHOLD
 from app.xai_utils import generate_heatmap
 
 
-app = FastAPI(title="AutiSense AI Backend")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print("Preloading models...")
+    get_age_model()
+    get_asd_model()
+    get_model()
+    print("All models loaded successfully.")
+    yield
+    # Shutdown
+    pass
+
+app = FastAPI(title="AutiSense AI Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,12 +34,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
-
+@app.get("/warmup")
+def warmup():
+    get_age_model()
+    get_asd_model()
+    get_model()
+    return {"status": "models_loaded"}
 # -----------------------------------------
 # 1️⃣ AGE CHECK
 # -----------------------------------------

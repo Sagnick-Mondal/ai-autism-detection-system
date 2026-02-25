@@ -2,6 +2,11 @@
 
 from app.config import MODEL_PATH, ASD_MODEL_PATH, AGE_MODEL_PATH
 import threading
+import tensorflow as tf
+
+tf.config.optimizer.set_jit(True)
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
 
 _emotion_model = None
 _asd_model = None

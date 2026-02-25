@@ -272,7 +272,7 @@ export default function EmotionDetectionApp() {
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
             onClick={handleEvaluate}
-            disabled={!file}
+            disabled={!file || globalLoading}
             className="
               w-full px-6 py-3 rounded-full
               bg-gradient-to-br from-[#001f65] to-[#6895FD]
