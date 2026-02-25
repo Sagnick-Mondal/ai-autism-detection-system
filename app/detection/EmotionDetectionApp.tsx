@@ -7,6 +7,7 @@ import { AiOutlineUpload, AiOutlineCamera } from "react-icons/ai";
 import { Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ErrorModal from "../components/ErrorModal";
+import ASDProbabilityModal from "../components/ASDProbabilityModal";
 
 interface BackendResponse {
   emotion: string;
@@ -28,6 +29,10 @@ export default function EmotionDetectionApp() {
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [asdModalOpen, setAsdModalOpen] = useState(false);
+  const [autismProb, setAutismProb] = useState(0);
+  const [nonAutismProb, setNonAutismProb] = useState(0);
+
   const handleFileSelect = (chosenFile?: File) => {
     if (!chosenFile) return;
 
@@ -45,33 +50,69 @@ export default function EmotionDetectionApp() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/predict-safe",
+      // STEP 1: Check ASD
+      const asdResponse = await fetch(
+        "https://ai-autism-detection-system-main.onrender.com/check-asd",
         {
           method: "POST",
           body: formData,
-        }
+        },
+      );
+
+      const asdData = await asdResponse.json();
+
+      if (!asdResponse.ok) {
+        throw new Error(asdData.detail || "ASD check failed");
+      }
+
+      // Store ASD probabilities
+      setAutismProb(asdData.autism_probability);
+      setNonAutismProb(asdData.non_autism_probability);
+
+      // Store temporarily for later
+      sessionStorage.setItem("uploadedFileName", file.name);
+
+      setAsdModalOpen(true);
+    } catch (err: any) {
+      setErrorMessage(
+        err.message ||
+          "We could not analyze this image. Please try a clearer facial photo.",
+      );
+      setErrorModalOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContinueToEmotion = async () => {
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(
+        "https://ai-autism-detection-system-main.onrender.com/predict-emotion",
+        {
+          method: "POST",
+          body: formData,
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Image could not be analyzed");
+        throw new Error(data.detail || "Emotion analysis failed");
       }
 
-      // Store result
       sessionStorage.setItem("emotionResult", JSON.stringify(data));
       sessionStorage.setItem("emotionImage", selectedImage!);
 
+      setAsdModalOpen(false);
       router.push("/result");
     } catch (err: any) {
-      setErrorMessage(
-        err.message ||
-          "We could not analyze this image. Please try a clearer facial photo."
-      );
+      setErrorMessage(err.message);
       setErrorModalOpen(true);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -234,6 +275,13 @@ export default function EmotionDetectionApp() {
           setFile(null);
           setSelectedImage(null);
         }}
+      />
+      <ASDProbabilityModal
+        isOpen={asdModalOpen}
+        autismProbability={autismProb}
+        nonAutismProbability={nonAutismProb}
+        onContinue={handleContinueToEmotion}
+        onClose={() => setAsdModalOpen(false)}
       />
     </>
   );
