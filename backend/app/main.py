@@ -11,7 +11,7 @@ from app.model import get_model, get_asd_model, get_age_model
 from app.utils import preprocess_image, preprocess_asd_image, preprocess_age_image
 from app.config import EMOTIONS, ASD_THRESHOLD, AGE_THRESHOLD
 from app.xai_utils import generate_heatmap
-
+from app.xai import generate_all_xai
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -126,9 +126,9 @@ async def check_asd(file: UploadFile = File(...)):
 
 
 # -----------------------------------------
-# 3️⃣ EMOTION PREDICTION
+# 3️⃣ EMOTION PREDICTION (UPDATED)
 # -----------------------------------------
-@app.post("/predict-emotion", response_model=PredictionResponse)
+@app.post("/predict-emotion")
 async def predict_emotion(file: UploadFile = File(...)):
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
@@ -136,9 +136,12 @@ async def predict_emotion(file: UploadFile = File(...)):
     image_bytes = await file.read()
 
     try:
-        image = preprocess_image(image_bytes)
+        # Preprocess image for model
+        image_tensor, original_image = preprocess_image(image_bytes, return_original=True)
+
         model = get_model()
-        predictions = model.predict(image, verbose=0)[0]
+        predictions = model.predict(image_tensor, verbose=0)[0]
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Emotion inference failed: {e}")
 
@@ -146,13 +149,30 @@ async def predict_emotion(file: UploadFile = File(...)):
     confidence = float(predictions[idx] * 100)
 
     try:
-        heatmap_base64 = generate_heatmap(image)
-        heatmap_data_url = f"data:image/png;base64,{heatmap_base64}"
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Heatmap generation failed: {e}")
+        # Generate all XAI maps
+        xai_results = generate_all_xai(
+            model=model,
+            img_tensor=image_tensor,
+            original_image=original_image
+        )
 
-    return PredictionResponse(
-        emotion=EMOTIONS[idx],
-        confidence=confidence,
-        heatmap=heatmap_data_url,
-    )
+        # For backward compatibility (best heatmap)
+        best_method = xai_results["best_method"]
+        best_heatmap_base64 = xai_results[best_method]
+        best_heatmap_data_url = f"data:image/png;base64,{best_heatmap_base64}"
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"XAI generation failed: {e}")
+
+    return {
+        "emotion": EMOTIONS[idx],
+        "confidence": confidence,
+        "best_method": best_method,
+        "heatmap": best_heatmap_data_url,
+        "xai": {
+            "gradcam": f"data:image/png;base64,{xai_results['gradcam']}",
+            "gradcampp": f"data:image/png;base64,{xai_results['gradcampp']}",
+            "saliency": f"data:image/png;base64,{xai_results['saliency']}",
+            "smoothgrad": f"data:image/png;base64,{xai_results['smoothgrad']}",
+        }
+    }
