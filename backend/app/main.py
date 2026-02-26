@@ -126,7 +126,7 @@ async def check_asd(file: UploadFile = File(...)):
 
 
 # -----------------------------------------
-# 3️⃣ EMOTION PREDICTION (UPDATED)
+# 3️⃣ EMOTION PREDICTION (FINAL FIXED)
 # -----------------------------------------
 @app.post("/predict-emotion")
 async def predict_emotion(file: UploadFile = File(...)):
@@ -136,39 +136,87 @@ async def predict_emotion(file: UploadFile = File(...)):
     image_bytes = await file.read()
 
     try:
-        # Preprocess image for model
-        image_tensor, original_image = preprocess_image(image_bytes, return_original=True)
+        # Preprocess image
+        image_tensor, original_image = preprocess_image(
+            image_bytes,
+            return_original=True
+        )
 
         model = get_model()
+
+        # Run prediction
         predictions = model.predict(image_tensor, verbose=0)[0]
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Emotion inference failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Emotion inference failed: {str(e)}"
+        )
 
+    # -------------------------
+    # Predicted Emotion
+    # -------------------------
     idx = int(np.argmax(predictions))
-    confidence = float(predictions[idx] * 100)
+    predicted_emotion = EMOTIONS[idx]
+
+    # -------------------------
+    # Probabilities for Pie Chart
+    # -------------------------
+    probabilities = {
+        EMOTIONS[i]: round(float(predictions[i] * 100), 2)
+        for i in range(len(predictions))
+    }
 
     try:
-        # Generate all XAI maps
+        # -------------------------
+        # Generate All XAI Maps
+        # -------------------------
         xai_results = generate_all_xai(
             model=model,
             img_tensor=image_tensor,
             original_image=original_image
         )
 
-        # For backward compatibility (best heatmap)
-        best_method = xai_results["best_method"]
-        best_heatmap_base64 = xai_results[best_method]
-        best_heatmap_data_url = f"data:image/png;base64,{best_heatmap_base64}"
+        # -------------------------
+        # Compute Focus Strength (Best Method Logic)
+        # -------------------------
+        def compute_focus_strength(heatmap_base64):
+            import base64
+            import numpy as np
+            import cv2
+
+            img_data = base64.b64decode(heatmap_base64)
+            np_arr = np.frombuffer(img_data, np.uint8)
+            img = cv2.imdecode(np_arr, cv2.IMREAD_GRAYSCALE)
+
+            return float(np.mean(img))
+
+        focus_scores = {
+            method: compute_focus_strength(xai_results[method])
+            for method in ["gradcam", "gradcampp", "saliency", "smoothgrad"]
+        }
+
+        best_method = max(focus_scores, key=focus_scores.get)
+
+        best_heatmap_data_url = (
+            f"data:image/png;base64,{xai_results[best_method]}"
+        )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"XAI generation failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"XAI generation failed: {str(e)}"
+        )
 
+    # -------------------------
+    # FINAL RESPONSE
+    # -------------------------
     return {
-        "emotion": EMOTIONS[idx],
-        "confidence": confidence,
+        "emotion": predicted_emotion,
         "best_method": best_method,
         "heatmap": best_heatmap_data_url,
+        "probabilities": probabilities,
+        "xai_scores": focus_scores,  # ✅ THIS WAS MISSING
         "xai": {
             "gradcam": f"data:image/png;base64,{xai_results['gradcam']}",
             "gradcampp": f"data:image/png;base64,{xai_results['gradcampp']}",
