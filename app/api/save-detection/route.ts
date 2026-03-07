@@ -37,17 +37,22 @@ export async function POST(req: Request) {
         const bucket = adminStorage; 
         const filePath = `detections/${userId}_${Date.now()}_${imageFileName || 'upload.jpg'}`;
         const fileRef = bucket.file(filePath);
-        
-        // Save the buffer bytes directly
+        const token = uuidv4();
+
+        // Save the buffer bytes directly with a simulated Firebase token
         await fileRef.save(imageBuffer, {
-          metadata: { contentType: "image/jpeg" }, // fallback to jpeg
-          public: true, // we want users to view this link later on the UI
+          metadata: { 
+            contentType: "image/jpeg",
+            metadata: { firebaseStorageDownloadTokens: token }
+          }, 
         });
 
-        // Natively generate the public reading URL
-        finalImageUrl = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+        // Generate the exact same public reading URL format that the client SDK creates natively
+        const encodedPath = encodeURIComponent(filePath);
+        finalImageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media&token=${token}`;
       } catch (err: any) {
         console.error("Firebase Admin SDK Storage Upload Failed:", err.message);
+        return new NextResponse(`Storage Upload Failed: ${err.message}`, { status: 500 });
       }
     }
 
