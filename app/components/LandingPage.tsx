@@ -79,7 +79,7 @@ export default function LandingPage() {
 
         {/* ================= BUTTONS ================= */}
         <motion.div
-          className="mt-10 flex flex-col md:flex-row gap-4 justify-center"
+          className="mt-10 flex flex-col md:flex-row gap-4 justify-center items-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
@@ -108,6 +108,8 @@ export default function LandingPage() {
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 260, damping: 18 }}
             href="https://github.com/Sagnick-Mondal/ai-autism-detection-system/tree/Main"
+            target="_blank"
+            rel="noopener noreferrer"
             className="
               px-8 py-3 rounded-full
               border border-slate-400 dark:border-white/30

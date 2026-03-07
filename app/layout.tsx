@@ -4,7 +4,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ShootingStars from "./components/ShootingStars";
 import ThemeProvider from "./components/ThemeProvider";
-import AuthModal from "./components/AuthModal";
+import { ClerkProvider } from '@clerk/nextjs';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,32 +24,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`
-    ${inter.className}
-    min-h-screen w-full relative overflow-hidden
-    transition-colors duration-300
-
-    text-slate-800 dark:text-slate-100
-
-    /* LIGHT MODE ONLY */
-    bg-gradient-to-br
-    from-slate-50 via-indigo-50 to-purple-100
-
-    /* DARK MODE OVERRIDES */
-    dark:bg-black
-    dark:bg-none
-  `}
-      >
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen w-full relative overflow-hidden transition-colors duration-300 text-slate-800 dark:text-slate-100 bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100 dark:bg-black dark:bg-none`}>
         <ThemeProvider>
-          <AuthModal />
           {/* Dark mode animation layer */}
           <ShootingStars />
           {/* App content */}
           <div className="relative z-10">{children}</div>
+          {/* Toast Notifications */}
+          <ToastContainer 
+            position="bottom-center"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
         </ThemeProvider>
       </body>
-    </html>
+      </html>
+    </ClerkProvider>
   );
 }
