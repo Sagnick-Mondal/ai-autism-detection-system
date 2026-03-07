@@ -56,7 +56,7 @@ export default function EmotionDetectionApp() {
       // 1️⃣ AGE CHECK
       setLoaderMessage("Checking age...");
       const ageResponse = await fetch(
-        "http://127.0.0.1:8000/check-age",
+        "https://ai-autism-detection-system-main.onrender.com/check-age",
         { method: "POST", body: formData }
       );
 
@@ -69,7 +69,7 @@ export default function EmotionDetectionApp() {
       // 2️⃣ ASD CHECK
       setLoaderMessage("Analyzing ASD traits...");
       const asdResponse = await fetch(
-        " http://127.0.0.1:8000/check-asd",
+        " https://ai-autism-detection-system-main.onrender.com/check-asd",
         { method: "POST", body: formData }
       );
 
@@ -111,7 +111,7 @@ export default function EmotionDetectionApp() {
       setLoaderMessage("Generating emotion heatmap...");
 
       const response = await fetch(
-        "http://127.0.0.1:8000/predict-emotion",
+        "https://ai-autism-detection-system-main.onrender.com/predict-emotion",
         {
           method: "POST",
           body: formData,
