@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 
 type Star = {
@@ -21,9 +21,14 @@ type Meteor = {
 export default function ShootingStars() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (resolvedTheme !== "dark") return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || resolvedTheme !== "dark") return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -116,7 +121,7 @@ export default function ShootingStars() {
     };
   }, [resolvedTheme]);
 
-  if (resolvedTheme !== "dark") return null;
+  if (!mounted || resolvedTheme !== "dark") return null;
 
   return (
     <canvas

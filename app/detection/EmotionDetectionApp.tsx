@@ -6,23 +6,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AiOutlineUpload, AiOutlineCamera } from "react-icons/ai";
 import { Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
-import ErrorModal from "../components/ErrorModal";
+import { toast } from "react-toastify";
 import ASDProbabilityModal from "../components/ASDProbabilityModal";
 import GlobalLoader from "../components/GlobalLoader";
+import { useEmotionStore } from "../store/emotionStore";
 
 export default function EmotionDetectionApp() {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
+  const { userId } = useAuth();
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Error modal
-  const [errorModalOpen, setErrorModalOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  // Error modal states removed, handled by toast directly
 
   // ASD modal
   const [asdModalOpen, setAsdModalOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function EmotionDetectionApp() {
       // 1️⃣ AGE CHECK
       setLoaderMessage("Checking age...");
       const ageResponse = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/check-age",
+        "http://127.0.0.1:8000/check-age",
         { method: "POST", body: formData }
       );
 
@@ -68,7 +69,7 @@ export default function EmotionDetectionApp() {
       // 2️⃣ ASD CHECK
       setLoaderMessage("Analyzing ASD traits...");
       const asdResponse = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/check-asd",
+        " http://127.0.0.1:8000/check-asd",
         { method: "POST", body: formData }
       );
 
@@ -84,11 +85,12 @@ export default function EmotionDetectionApp() {
       setAsdModalOpen(true);
 
     } catch (err: any) {
-      setErrorMessage(
+      toast.error(
         err?.message ||
           "We could not analyze this image. Please try a clearer facial photo."
       );
-      setErrorModalOpen(true);
+      setFile(null);
+      setSelectedImage(null);
     } finally {
       setGlobalLoading(false);
     }
@@ -109,7 +111,7 @@ export default function EmotionDetectionApp() {
       setLoaderMessage("Generating emotion heatmap...");
 
       const response = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/predict-emotion",
+        "http://127.0.0.1:8000/predict-emotion",
         {
           method: "POST",
           body: formData,
@@ -122,15 +124,42 @@ export default function EmotionDetectionApp() {
         throw new Error(data.detail || "Emotion analysis failed");
       }
 
-      sessionStorage.setItem("emotionResult", JSON.stringify(data));
-      sessionStorage.setItem("emotionImage", selectedImage!);
+      useEmotionStore.getState().setEmotionResult(data, selectedImage!);
+
+      if (userId) {
+        try {
+          // We convert the File to base64 so we can safely pass it to our API route
+          // The API route (running on server) will bypass CORS and upload natively via Admin SDK
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve) => {
+             reader.onload = () => resolve(reader.result as string);
+             reader.readAsDataURL(file!);
+          });
+          const b64Image = await base64Promise;
+
+          setLoaderMessage("Saving results...");
+          const { saveDetectionResult } = await import("../../lib/db");
+          
+          await saveDetectionResult(userId, {
+            emotion: data.emotion,
+            best_method: data.best_method,
+            probabilities: data.probabilities,
+            xai_scores: data.xai_scores,
+            imageFileName: file!.name,
+            imageBase64: b64Image // we pass base64 to server to let server do the uploading
+          });
+        } catch (e) {
+          console.error("Failed to save to firebase", e);
+        }
+      }
 
       setAsdModalOpen(false);
       router.push("/result");
 
     } catch (err: any) {
-      setErrorMessage(err.message);
-      setErrorModalOpen(true);
+      toast.error(err.message);
+      setFile(null);
+      setSelectedImage(null);
     } finally {
       setGlobalLoading(false);
     }
@@ -193,7 +222,8 @@ export default function EmotionDetectionApp() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => uploadInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 border border-white/30 rounded-full p-3 hover:bg-white/20"
+              disabled={!userId}
+              className="flex-1 flex items-center justify-center gap-2 border border-white/30 rounded-full p-3 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             >
               <AiOutlineUpload size={22} />
               Upload
@@ -203,7 +233,8 @@ export default function EmotionDetectionApp() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => cameraInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-2 border border-white/30 rounded-full p-3 hover:bg-white/20"
+              disabled={!userId}
+              className="flex-1 flex items-center justify-center gap-2 border border-white/30 rounded-full p-3 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             >
               <AiOutlineCamera size={22} />
               Take Photo
@@ -215,14 +246,15 @@ export default function EmotionDetectionApp() {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => setMobileMenuOpen((p) => !p)}
-              className="w-full flex items-center justify-center gap-2 border border-white/30 rounded-full p-3"
+              disabled={!userId}
+              className="w-full flex items-center justify-center gap-2 border border-white/30 rounded-full p-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <AiOutlineUpload size={22} />
               Choose Image
             </motion.button>
 
             <AnimatePresence>
-              {mobileMenuOpen && (
+              {mobileMenuOpen && userId && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -248,6 +280,12 @@ export default function EmotionDetectionApp() {
               )}
             </AnimatePresence>
           </div>
+
+          {!userId && (
+            <p className="text-sm font-medium text-red-500 dark:text-red-400 text-center">
+              Please sign in to upload and analyze your image.
+            </p>
+          )}
 
           {/* INPUTS */}
           <input
@@ -287,16 +325,6 @@ export default function EmotionDetectionApp() {
       </section>
 
       {/* MODALS */}
-      <ErrorModal
-        isOpen={errorModalOpen}
-        message={errorMessage}
-        onClose={() => setErrorModalOpen(false)}
-        onAction={() => {
-          setFile(null);
-          setSelectedImage(null);
-        }}
-      />
-
       <ASDProbabilityModal
         isOpen={asdModalOpen}
         autismProbability={autismProb}

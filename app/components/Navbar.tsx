@@ -4,20 +4,18 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AiOutlineMenu } from "react-icons/ai";
 import ThemeToggle from "./ThemeToggle";
-import { useAuthModal } from "./useAuthModal";
 import Logo from "./Logo";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
   const [openMenu, setOpenMenu] = useState(false);
-  const { open } = useAuthModal();
 
   const navItems = [
     { name: "About Us", href: "/about" },
     {
       name: "Resources",
       href: "https://github.com/Sagnick-Mondal/ai-autism-detection-system/tree/Main",
-    },
-    { name: "Sign Up", action: "signup" },
+    }
   ];
 
   return (
@@ -39,6 +37,18 @@ export default function Navbar() {
         {/* Right Controls */}
         <div className="flex items-center gap-4">
           <ThemeToggle />
+
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="hidden md:block px-4 py-2 text-sm font-medium border border-white/30 rounded-xl hover:bg-white/20 transition-colors">
+                Sign In
+              </button>
+            </SignInButton>
+          </SignedOut>
 
           {/* Dropdown Button */}
           <button
@@ -77,24 +87,7 @@ export default function Navbar() {
             "
           >
             <div className="flex flex-col divide-y divide-white/10">
-              {navItems.map((item, index) =>
-                item.action === "signup" ? (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      open("signup");
-                      setOpenMenu(false);
-                    }}
-                    className="
-                      px-5 py-3 text-left
-                      text-slate-900 dark:text-slate-100
-                      hover:bg-white/20 dark:hover:bg-white/10
-                      transition-colors
-                    "
-                  >
-                    {item.name}
-                  </button>
-                ) : (
+              {navItems.map((item, index) => (
                   <a
                     key={index}
                     href={item.href}
@@ -108,8 +101,17 @@ export default function Navbar() {
                   >
                     {item.name}
                   </a>
-                )
-              )}
+              ))}
+
+              <SignedOut>
+                <div className="md:hidden">
+                  <SignInButton mode="modal">
+                    <button className="w-full px-5 py-3 text-left text-slate-900 dark:text-slate-100 hover:bg-white/20 dark:hover:bg-white/10 transition-colors">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                </div>
+              </SignedOut>
             </div>
           </motion.div>
         )}

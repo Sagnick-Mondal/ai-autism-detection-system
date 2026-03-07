@@ -113,20 +113,37 @@ export default function ASDProbabilityModal({
                 </p>
               </div>
 
-              {/* Continue Button */}
-              <button
-                onClick={onContinue}
-                className="
-                  mt-10 w-full py-3 rounded-full
-                  bg-gradient-to-br from-[#001f65] to-[#6895FD]
-                  text-white font-semibold
-                  shadow-lg
-                  hover:scale-[1.03]
-                  transition-all duration-200
-                "
-              >
-                Continue to Emotion Analysis
-              </button>
+              {/* Dynamic Button */}
+              {autismProbability > nonAutismProbability ? (
+                <button
+                  onClick={onContinue}
+                  className="
+                    mt-10 w-full py-3 rounded-full
+                    bg-gradient-to-br from-[#001f65] to-[#6895FD]
+                    text-white font-semibold
+                    shadow-lg
+                    hover:scale-[1.03]
+                    transition-all duration-200
+                  "
+                >
+                  Continue to Emotion Analysis
+                </button>
+              ) : (
+                <button
+                  onClick={onClose}
+                  className="
+                    mt-10 w-full py-3 rounded-full
+                    bg-slate-200 dark:bg-white/10
+                    text-slate-800 dark:text-white font-semibold
+                    border border-slate-300 dark:border-white/20
+                    shadow-sm
+                    hover:scale-[1.03]
+                    transition-all duration-200
+                  "
+                >
+                  Return to Scanner
+                </button>
+              )}
             </div>
           </motion.div>
         </>

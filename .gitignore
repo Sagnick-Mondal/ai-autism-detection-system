@@ -36,3 +36,6 @@ yarn-error.log*
 next-env.d.ts
 public/autism.mp4
 *.mp4
+
+# clerk configuration (can include secrets)
+/.clerk/

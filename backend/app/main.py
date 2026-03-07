@@ -57,7 +57,7 @@ async def check_age(file: UploadFile = File(...)):
     gate = validate_human_face(image_bytes)
 
     if not gate["has_human_face"]:
-        raise HTTPException(400, "No human face detected")
+        raise HTTPException(400, f"No human face detected. Reason: {gate.get('reason', 'Unknown')}")
 
     if not gate["face_large_enough"]:
         raise HTTPException(400, "Face too small for analysis")
@@ -94,7 +94,7 @@ async def check_asd(file: UploadFile = File(...)):
     gate = validate_human_face(image_bytes)
 
     if not gate["has_human_face"]:
-        raise HTTPException(400, "No human face detected")
+        raise HTTPException(400, f"No human face detected. Reason: {gate.get('reason', 'Unknown')}")
 
     if not gate["face_large_enough"]:
         raise HTTPException(400, "Face too small for analysis")

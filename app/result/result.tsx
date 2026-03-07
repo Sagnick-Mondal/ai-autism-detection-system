@@ -15,14 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-interface ResultData {
-  emotion: string;
-  best_method: string;
-  probabilities: Record<string, number>;
-  xai_scores: Record<string, number>;
-  xai: Record<string, string>;
-}
+import { useEmotionStore } from "../store/emotionStore";
 
 const EMOTION_COLORS: Record<string, string> = {
   Anger: "red",
@@ -35,24 +28,21 @@ const EMOTION_COLORS: Record<string, string> = {
 
 export default function Result() {
   const router = useRouter();
-  const [result, setResult] = useState<ResultData | null>(null);
+  const { emotionResult, clearEmotionResult } = useEmotionStore();
   const [viewMode, setViewMode] = useState<"best" | "comparison">("best");
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("emotionResult");
-    const mode = sessionStorage.getItem("viewMode");
-
-    if (!stored) {
-      router.push("/");
+    if (!emotionResult) {
+      router.push("/detection");
       return;
     }
+    
+    // Cleanup if needed: clearEmotionResult() could be called on leaving the page
+  }, [router, emotionResult]);
 
-    setResult(JSON.parse(stored));
-    if (mode === "comparison") setViewMode("comparison");
-    sessionStorage.removeItem("viewMode");
-  }, [router]);
+  if (!emotionResult) return null;
 
-  if (!result) return null;
+  const result = emotionResult;
 
   const pieData = Object.entries(result.probabilities).map(
     ([name, value]) => ({
