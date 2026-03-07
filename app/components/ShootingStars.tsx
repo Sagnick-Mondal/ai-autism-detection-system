@@ -119,7 +119,7 @@ export default function ShootingStars() {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resize);
     };
-  }, [resolvedTheme]);
+  }, [resolvedTheme, mounted]);
 
   if (!mounted || resolvedTheme !== "dark") return null;
 
