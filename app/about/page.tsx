@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
 import {
   Brain,
   ShieldCheck,
@@ -52,14 +53,53 @@ export default function AboutPage() {
     setForm({ name: "", age: "", contact: "", details: "" });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.age || !form.details) {
-      alert("Age and detailed feedback are required.");
+    
+    if (!form.name || !form.contact || !form.age || !form.details) {
+      toast.error("Name, email, age, and detailed feedback are required.");
       return;
     }
-    alert("Thank you for your feedback 💜");
-    handleClear();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.contact)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    const ageNum = parseInt(form.age);
+    if (isNaN(ageNum) || ageNum < 0 || ageNum > 120) {
+      toast.error("Please enter a valid age.");
+      return;
+    }
+
+    if (form.details.trim().length < 10) {
+      toast.error("Feedback details must be at least 10 characters long.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/save-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
+
+      toast.success("Thank you for your feedback");
+      handleClear();
+    } catch (error) {
+      toast.error("Something went wrong. Please try again later.");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -232,17 +272,20 @@ export default function AboutPage() {
       >
         <input
           name="name"
-          placeholder="Name (optional)"
+          placeholder="Name *"
           value={form.name}
           onChange={handleChange}
+          required
           className="w-full p-3 rounded-lg bg-white/80 dark:bg-black/40 border border-slate-300 dark:border-white/20"
         />
 
         <input
           name="contact"
-          placeholder="Phone or Email (optional)"
+          type="email"
+          placeholder="Email *"
           value={form.contact}
           onChange={handleChange}
+          required
           className="w-full p-3 rounded-lg bg-white/80 dark:bg-black/40 border border-slate-300 dark:border-white/20"
         />
 
@@ -268,9 +311,10 @@ export default function AboutPage() {
         <div className="flex gap-4 justify-center">
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-br from-[#001f65] to-[#6895FD] text-white font-semibold shadow-lg hover:scale-105 transition"
+            disabled={isSubmitting}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-br from-[#001f65] to-[#6895FD] text-white font-semibold shadow-lg hover:scale-105 transition ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""}`}
           >
-            <Send size={18} /> Submit
+            <Send size={18} /> {isSubmitting ? "Submitting..." : "Submit"}
           </button>
 
           <button
