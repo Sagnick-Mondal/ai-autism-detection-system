@@ -124,7 +124,7 @@ def generate_all_xai(model, img_tensor, original_image):
 
     return {
         "gradcam": array_to_base64(overlay_heatmap(img_np, g1)),
-        "gradcampp": array_to_base64(overlay_heatmap(img_np, g2)),
+        "gradcam++": array_to_base64(overlay_heatmap(img_np, g2)),
         "saliency": array_to_base64(overlay_heatmap(img_np, g3)),
         "smoothgrad": array_to_base64(overlay_heatmap(img_np, g4)),
         "best_method": "gradcam"

@@ -1,0 +1,35 @@
+﻿diff --git a/backend/app/main.py b/backend/app/main.py
+index 76124ac..6136979 100644
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -195,7 +195,7 @@ async def predict_emotion(file: UploadFile = File(...)):
+ 
+         focus_scores = {
+             method: compute_focus_strength(xai_results[method])
+-            for method in ["gradcam", "gradcampp", "saliency", "smoothgrad"]
++            for method in ["gradcam", "gradcam++", "saliency", "smoothgrad"]
+         }
+ 
+         best_method = max(focus_scores, key=focus_scores.get)
+@@ -221,7 +221,7 @@ async def predict_emotion(file: UploadFile = File(...)):
+         "xai_scores": focus_scores,  # Γ£à THIS WAS MISSING
+         "xai": {
+             "gradcam": f"data:image/png;base64,{xai_results['gradcam']}",
+-            "gradcampp": f"data:image/png;base64,{xai_results['gradcampp']}",
++            "gradcam++": f"data:image/png;base64,{xai_results['gradcam++']}",
+             "saliency": f"data:image/png;base64,{xai_results['saliency']}",
+             "smoothgrad": f"data:image/png;base64,{xai_results['smoothgrad']}",
+         }
+diff --git a/backend/app/xai.py b/backend/app/xai.py
+index 4774ad0..5d41d30 100644
+--- a/backend/app/xai.py
++++ b/backend/app/xai.py
+@@ -124,7 +124,7 @@ def generate_all_xai(model, img_tensor, original_image):
+ 
+     return {
+         "gradcam": array_to_base64(overlay_heatmap(img_np, g1)),
+-        "gradcampp": array_to_base64(overlay_heatmap(img_np, g2)),
++        "gradcam++": array_to_base64(overlay_heatmap(img_np, g2)),
+         "saliency": array_to_base64(overlay_heatmap(img_np, g3)),
+         "smoothgrad": array_to_base64(overlay_heatmap(img_np, g4)),
+         "best_method": "gradcam"

@@ -9,43 +9,83 @@ interface LoaderProps {
 
 export default function GlobalLoader({
   isOpen,
-  message = "Analyzing image...",
+  message = "Analyzing...",
 }: LoaderProps) {
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-md"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
         >
-          <motion.div
-            className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-3xl border border-white/40 dark:border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col items-center gap-6 max-w-sm w-[90%]"
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          >
-            <div className="relative flex items-center justify-center w-16 h-16">
+          {/* Main loader container */}
+          <div className="relative flex flex-col items-center justify-center p-12">
+            
+            {/* Outer ambient glow */}
+            <motion.div
+              className="absolute w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
+            
+            {/* Inner ambient glow */}
+            <motion.div
+              className="absolute w-32 h-32 bg-purple-500/30 rounded-full blur-2xl pointer-events-none"
+              animate={{ scale: [1.2, 0.8, 1.2], opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+
+            {/* Premium Multi-ring Spinner */}
+            <div className="relative flex items-center justify-center w-24 h-24 mb-8">
+              {/* Outer Ring */}
               <motion.div
-                className="absolute inset-0 border-4 border-slate-200 dark:border-slate-700 rounded-full"
-              />
-              <motion.div
-                className="absolute inset-0 border-4 border-transparent border-t-[#6895FD] rounded-full"
+                className="absolute inset-0 rounded-full border-[3px] border-t-indigo-400 border-r-indigo-400/30 border-b-transparent border-l-transparent"
                 animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
               />
+              {/* Middle Ring */}
               <motion.div
-                className="absolute inset-2 bg-gradient-to-tr from-[#001f65] to-[#6895FD] rounded-full opacity-20 blur-md"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                className="absolute inset-2 rounded-full border-[3px] border-b-purple-400 border-l-purple-400/30 border-t-transparent border-r-transparent"
+                animate={{ rotate: -360 }}
+                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+              />
+              {/* Inner Ring */}
+              <motion.div
+                className="absolute inset-4 rounded-full border-[3px] border-t-sky-400 border-r-transparent border-b-transparent border-l-sky-400/30"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
+              />
+              
+              {/* Core Pulsing Dot */}
+              <motion.div
+                className="w-4 h-4 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.9)]"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
+                transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
               />
             </div>
-            <p className="text-slate-700 dark:text-slate-200 font-semibold text-lg text-center tracking-tight">
-              {message}
-            </p>
-          </motion.div>
+
+            {/* Message Bar */}
+            <motion.div
+              className="relative px-8 py-3 bg-white/10 border border-white/20 shadow-2xl rounded-full backdrop-blur-xl overflow-hidden"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
+            >
+              {/* Shimmer effect inside the message pill */}
+              <motion.div
+                className="absolute inset-0 w-[200%] bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
+                animate={{ x: ["-100%", "50%"] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+              />
+              <p className="relative text-white font-medium tracking-widest uppercase text-sm z-10">
+                {message}
+              </p>
+            </motion.div>
+            
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

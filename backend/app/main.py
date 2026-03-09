@@ -195,7 +195,7 @@ async def predict_emotion(file: UploadFile = File(...)):
 
         focus_scores = {
             method: compute_focus_strength(xai_results[method])
-            for method in ["gradcam", "gradcampp", "saliency", "smoothgrad"]
+            for method in ["gradcam", "gradcam++", "saliency", "smoothgrad"]
         }
 
         best_method = max(focus_scores, key=focus_scores.get)
@@ -221,7 +221,7 @@ async def predict_emotion(file: UploadFile = File(...)):
         "xai_scores": focus_scores,  # ✅ THIS WAS MISSING
         "xai": {
             "gradcam": f"data:image/png;base64,{xai_results['gradcam']}",
-            "gradcampp": f"data:image/png;base64,{xai_results['gradcampp']}",
+            "gradcam++": f"data:image/png;base64,{xai_results['gradcam++']}",
             "saliency": f"data:image/png;base64,{xai_results['saliency']}",
             "smoothgrad": f"data:image/png;base64,{xai_results['smoothgrad']}",
         }
