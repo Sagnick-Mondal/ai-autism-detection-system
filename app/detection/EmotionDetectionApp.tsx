@@ -70,7 +70,7 @@ export default function EmotionDetectionApp() {
       setLoaderMessage("Checking age...");
 
       const ageResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/check-age`,
+        `${"http://127.0.0.1:8000"}/check-age`,
         { method: "POST", body: formData }
       );
 
@@ -85,7 +85,7 @@ export default function EmotionDetectionApp() {
       setLoaderMessage("Analyzing ASD traits...");
 
       const asdResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/check-asd`,
+        `${"http://127.0.0.1:8000"}/check-asd`,
         { method: "POST", body: formData }
       );
 
@@ -133,7 +133,7 @@ export default function EmotionDetectionApp() {
       setLoaderMessage("Generating emotion heatmap...");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/predict-emotion`,
+        `${"http://127.0.0.1:8000"}/predict-emotion`,
         {
           method: "POST",
           body: formData,
