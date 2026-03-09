@@ -119,11 +119,6 @@ async def check_asd(file: UploadFile = File(...)):
     non_autism_prob = prediction
     autism_prob = 1 - prediction
 
-    if non_autism_prob >= ASD_THRESHOLD:
-        raise HTTPException(
-            status_code=400,
-            detail="Not autistic. Please give a photo with autistic child."
-        )
 
     return ASDResponse(
         is_autistic=True,
