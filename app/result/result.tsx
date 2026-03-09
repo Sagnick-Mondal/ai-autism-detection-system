@@ -18,17 +18,23 @@ import {
 import { useEmotionStore } from "../store/emotionStore";
 
 const EMOTION_COLORS: Record<string, string> = {
-  Anger: "red",
-  Fear: "#FFD700",
-  Happiness: "#32CD32",
-  Sadness: "#4169E1",
-  Surprise: "#FF8C00",
-  Neutral: "#A9A9A9",
+  Anger: "#FF4C4C",
+  Fear: "#FF9F1C",
+  Happiness: "#FFD93D",
+  Sadness: "#4D96FF",
+  Surprise: "#9D4EDD",
+  Neutral: "#6C757D",
 };
+
+function getEmotionColor(name: string) {
+  const formatted =
+    name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  return EMOTION_COLORS[formatted] || "#8884d8";
+}
 
 export default function Result() {
   const router = useRouter();
-  const { emotionResult, clearEmotionResult } = useEmotionStore();
+  const { emotionResult } = useEmotionStore();
   const [viewMode, setViewMode] = useState<"best" | "comparison">("best");
 
   useEffect(() => {
@@ -36,13 +42,26 @@ export default function Result() {
       router.push("/detection");
       return;
     }
-    
-    // Cleanup if needed: clearEmotionResult() could be called on leaving the page
   }, [router, emotionResult]);
 
   if (!emotionResult) return null;
 
   const result = emotionResult;
+
+  /* =============================
+     CONFIDENCE CALCULATION
+  ============================= */
+
+  const confidence =
+    result.probabilities[result.emotion] ??
+    result.probabilities[result.emotion.toLowerCase()] ??
+    result.probabilities[
+      result.emotion.charAt(0).toUpperCase() +
+        result.emotion.slice(1).toLowerCase()
+    ] ??
+    0;
+
+  const confidencePercent = confidence.toFixed(1);
 
   const pieData = Object.entries(result.probabilities).map(
     ([name, value]) => ({
@@ -67,25 +86,29 @@ export default function Result() {
           transition={{ duration: 0.5 }}
           className="mb-8 flex justify-between items-center"
         >
-          <h1 className="text-4xl font-bold text-left">
+          {/* EMOTION + CONFIDENCE */}
+          <h1 className="text-4xl font-bold text-left flex items-center gap-4">
             {result.emotion}
+            <span className="px-4 py-1 rounded-full bg-white/20 text-lg font-semibold">
+              {confidencePercent}%
+            </span>
           </h1>
 
           {/* TOGGLE */}
           <div className="flex gap-3">
             {(["best", "comparison"] as const).map((mode) => (
               <motion.button
-          key={mode}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setViewMode(mode)}
-          className={`px-6 py-2 rounded-full font-semibold transition-all ${
-            viewMode === mode
-              ? "bg-gradient-to-br from-[#001f65] to-[#6895FD] text-white shadow-lg"
-              : "bg-white/20 hover:bg-white/30"
-          }`}
+                key={mode}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setViewMode(mode)}
+                className={`px-6 py-2 rounded-full font-semibold transition-all ${
+                  viewMode === mode
+                    ? "bg-gradient-to-br from-[#001f65] to-[#6895FD] text-white shadow-lg"
+                    : "bg-white/20 hover:bg-white/30"
+                }`}
               >
-          {mode === "best" ? "Best Result" : "Full Comparison"}
+                {mode === "best" ? "Best Result" : "Full Comparison"}
               </motion.button>
             ))}
           </div>
@@ -95,14 +118,21 @@ export default function Result() {
         {viewMode === "best" && (
           <div className="grid md:grid-cols-2 gap-12">
 
-            <div className="glass-card p-6 rounded-2xl">
-              <img src={result.xai[result.best_method]} className="rounded-xl mb-4" />
+            <div className="glass-card p-6 rounded-2xl flex flex-col">
+              <img
+                src={result.xai[result.best_method]}
+                alt={`${result.best_method} XAI visualization showing attention regions for ${result.emotion} emotion detection`}
+                className="rounded-xl mb-6 w-full h-auto object-cover"
+              />
 
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie data={pieData} dataKey="value" outerRadius={70}>
                     {pieData.map((entry, index) => (
-                      <Cell key={index} fill={EMOTION_COLORS[entry.name]} />
+                      <Cell
+                        key={index}
+                        fill={getEmotionColor(entry.name)}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -135,6 +165,7 @@ export default function Result() {
                   <Bar dataKey="score" fill="green" />
                 </BarChart>
               </ResponsiveContainer>
+
               <button
                 onClick={() => router.push("/detection")}
                 className="mt-10 w-full px-6 py-3 rounded-full bg-gradient-to-br from-[#001f65] to-[#6895FD] text-white font-semibold shadow-lg"
@@ -142,7 +173,6 @@ export default function Result() {
                 Try Another Image
               </button>
             </div>
-            
           </div>
         )}
 
@@ -159,10 +189,10 @@ export default function Result() {
                     {method}
                   </h3>
 
-                  <img src={img} className="rounded-xl mb-4" />
+                  <img src={img} alt={`${method} XAI visualization for ${result.emotion} emotion detection`} className="rounded-xl mb-4" />
 
                   <div className="text-center font-semibold mb-2">
-                    {result.emotion}
+                    {result.emotion} ({confidencePercent}%)
                   </div>
 
                   <ResponsiveContainer width="100%" height={200}>
@@ -171,7 +201,7 @@ export default function Result() {
                         {pieData.map((entry, index) => (
                           <Cell
                             key={index}
-                            fill={EMOTION_COLORS[entry.name]}
+                            fill={getEmotionColor(entry.name)}
                           />
                         ))}
                       </Pie>
