@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ShootingStars from "./components/ShootingStars";
 import ThemeProvider from "./components/ThemeProvider";
-import { ClerkProvider } from '@clerk/nextjs';
+import { AuthProvider } from "./context/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -24,10 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen w-full relative overflow-hidden transition-colors duration-300 text-slate-800 dark:text-slate-100 bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100 dark:bg-black dark:bg-none`}>
-        <ThemeProvider>
+    <html lang="en" suppressHydrationWarning>
+    <body className={`${inter.className} min-h-screen w-full relative overflow-hidden transition-colors duration-300 text-slate-800 dark:text-slate-100 bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100 dark:bg-black dark:bg-none`}>
+      <ThemeProvider>
+        <AuthProvider>
           {/* Dark mode animation layer */}
           <ShootingStars />
           {/* App content */}
@@ -45,9 +45,9 @@ export default function RootLayout({
             pauseOnHover
             theme="colored"
           />
-        </ThemeProvider>
-      </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </body>
+    </html>
   );
 }

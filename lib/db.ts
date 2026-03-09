@@ -2,14 +2,15 @@
 // import { db } from "./firebase";
 // import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-export async function saveDetectionResult(userId: string, emotionData: any) {
+export async function saveDetectionResult(userId: string, emotionData: any, idToken: string) {
   try {
-    // Send data to our secure Next.js API route, which verifies Clerk Auth
+    // Send data to our secure Next.js API route, which verifies the Firebase token
     // and writes to Firestore using the Firebase Admin SDK.
     const response = await fetch('/api/save-detection', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
       },
       body: JSON.stringify(emotionData),
     });

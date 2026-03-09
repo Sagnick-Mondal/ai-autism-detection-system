@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AiOutlineUpload, AiOutlineCamera } from "react-icons/ai";
 import { Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "../context/AuthContext";
 
 import ASDProbabilityModal from "../components/ASDProbabilityModal";
 import GlobalLoader from "../components/GlobalLoader";
@@ -17,7 +17,7 @@ export default function EmotionDetectionApp() {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -70,7 +70,7 @@ export default function EmotionDetectionApp() {
       setLoaderMessage("Checking age...");
 
       const ageResponse = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/check-age",
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/check-age`,
         { method: "POST", body: formData }
       );
 
@@ -85,7 +85,7 @@ export default function EmotionDetectionApp() {
       setLoaderMessage("Analyzing ASD traits...");
 
       const asdResponse = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/check-asd",
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/check-asd`,
         { method: "POST", body: formData }
       );
 
@@ -133,7 +133,7 @@ export default function EmotionDetectionApp() {
       setLoaderMessage("Generating emotion heatmap...");
 
       const response = await fetch(
-        "https://ai-autism-detection-system-main.onrender.com/predict-emotion",
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/predict-emotion`,
         {
           method: "POST",
           body: formData,
@@ -150,27 +150,19 @@ export default function EmotionDetectionApp() {
 
       if (userId) {
         try {
-          const reader = new FileReader();
-
-          const base64Promise = new Promise<string>((resolve) => {
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(file!);
-          });
-
-          const b64Image = await base64Promise;
-
           setLoaderMessage("Saving results...");
 
           const { saveDetectionResult } = await import("../../lib/db");
-
-          await saveDetectionResult(userId, {
-            emotion: data.emotion,
-            best_method: data.best_method,
-            probabilities: data.probabilities,
-            xai_scores: data.xai_scores,
-            imageFileName: file!.name,
-            imageBase64: b64Image
-          });
+          
+          const token = await getToken();
+          if (token) {
+            await saveDetectionResult(userId, {
+              emotion: data.emotion,
+              best_method: data.best_method,
+              probabilities: data.probabilities,
+              xai_scores: data.xai_scores
+            }, token);
+          }
 
         } catch (e) {
           console.error("Failed to save to firebase", e);

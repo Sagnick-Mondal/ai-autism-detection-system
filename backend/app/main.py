@@ -56,7 +56,10 @@ async def check_age(file: UploadFile = File(...)):
 
     gate = validate_human_face(image_bytes)
 
-    if not gate["has_human_face"]:
+    if not gate["has_human_face"] and gate["reason"] == "Invalid or corrupted image file":
+        raise HTTPException(400, "Invalid or corrupted image file")
+
+    if not gate["has_human_face"] and gate["reason"] == "No human face detected":
         raise HTTPException(400, "No human face detected")
 
     if not gate["face_large_enough"]:
@@ -93,7 +96,10 @@ async def check_asd(file: UploadFile = File(...)):
 
     gate = validate_human_face(image_bytes)
 
-    if not gate["has_human_face"]:
+    if not gate["has_human_face"] and gate["reason"] == "Invalid or corrupted image file":
+        raise HTTPException(400, "Invalid or corrupted image file")
+
+    if not gate["has_human_face"] and gate["reason"] == "No human face detected":
         raise HTTPException(400, "No human face detected")
 
     if not gate["face_large_enough"]:
@@ -108,6 +114,7 @@ async def check_asd(file: UploadFile = File(...)):
         prediction = float(asd_model.predict(asd_image, verbose=0)[0][0])
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ASD inference failed: {e}")
+
 
     non_autism_prob = prediction
     autism_prob = 1 - prediction
